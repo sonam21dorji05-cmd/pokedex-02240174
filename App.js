@@ -8,6 +8,7 @@ import PokedexScreen from './src/screens/PokedexScreen';
 import TeamScreen from './src/screens/TeamScreen';
 import GameScreen from './src/screens/GameScreen';
 import DetailScreen from './src/screens/DetailScreen';
+import { TeamProvider } from './src/TeamContext';
 import { APP_NAME, COLORS } from './src/config';
 
 const Tab = createBottomTabNavigator();
@@ -63,20 +64,22 @@ function Tabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator screenOptions={headerStyle}>
-        <Stack.Screen
-          name="Tabs"
-          component={Tabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Detail"
-          component={DetailScreen}
-          options={{ title: 'Details' }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <TeamProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator screenOptions={headerStyle}>
+          <Stack.Screen
+            name="Tabs"
+            component={Tabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Detail"
+            component={DetailScreen}
+            options={{ title: 'Details', headerBackTitle: 'Back' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </TeamProvider>
   );
 }

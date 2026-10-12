@@ -9,7 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { fetchPokemonDetails, getArtworkUrl } from '../api';
-import { COLORS } from '../config';
+import { useTeam } from '../TeamContext';
+import { COLORS, APP_NAME } from '../config';
 
 const MAX_STAT = 255;
 
@@ -20,6 +21,7 @@ export default function DetailScreen({ route, navigation }) {
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isInTeam, isFull, addToTeam, removeFromTeam } = useTeam();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,7 +29,7 @@ export default function DetailScreen({ route, navigation }) {
     try {
       const data = await fetchPokemonDetails(id);
       setPokemon(data);
-      navigation.setOptions({ title: capitalize(data.name) });
+      navigation.setOptions({ title: APP_NAME });
     } catch (e) {
       setError(e.message || 'Something went wrong');
     } finally {
@@ -58,6 +60,9 @@ export default function DetailScreen({ route, navigation }) {
       </View>
     );
   }
+
+  const inTeam = isInTeam(pokemon.id);
+  const disabled = !inTeam && isFull;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -98,9 +103,24 @@ export default function DetailScreen({ route, navigation }) {
         ))}
       </View>
 
-      {/* Placeholder: wired to the team in Step 6 */}
-      <Pressable style={styles.button} onPress={() => {}}>
-        <Text style={styles.buttonText}>Add to team</Text>
+      <Pressable
+        style={[styles.button, disabled && styles.buttonDisabled]}
+        disabled={disabled}
+        onPress={() => {
+          if (inTeam) {
+            removeFromTeam(pokemon.id);
+          } else {
+            addToTeam({
+              id: pokemon.id,
+              name: pokemon.name,
+              stats: pokemon.stats.map((s) => ({ name: s.stat.name, value: s.base_stat })),
+            });
+          }
+        }}
+      >
+        <Text style={styles.buttonText}>
+          {inTeam ? 'Remove from team' : disabled ? 'Team is full (6/6)' : 'Add to team'}
+        </Text>
       </Pressable>
     </ScrollView>
   );
@@ -145,5 +165,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
   },
+  buttonDisabled: { backgroundColor: COLORS.muted },
   buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 });
