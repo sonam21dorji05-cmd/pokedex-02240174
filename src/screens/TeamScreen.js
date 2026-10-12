@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import PokemonCard from '../components/PokemonCard';
 import { useTeam, MAX_TEAM } from '../TeamContext';
-import { COLORS } from '../config';
+import { useTheme } from '../ThemeContext';
 
 export default function TeamScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { team, totalStats, removeFromTeam } = useTeam();
 
   return (
@@ -38,16 +41,17 @@ export default function TeamScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  summary: {
-    padding: 14,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2D9EE',
-  },
-  summaryText: { color: COLORS.text, fontWeight: '600' },
-  remove: { alignSelf: 'flex-end', marginRight: 20, marginBottom: 4 },
-  removeText: { color: '#C0392B', fontWeight: '600' },
-  empty: { textAlign: 'center', color: COLORS.muted, marginTop: 40, paddingHorizontal: 30 },
-});
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    summary: {
+      padding: 14,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    summaryText: { color: colors.text, fontWeight: '600' },
+    remove: { alignSelf: 'flex-end', marginRight: 20, marginBottom: 4 },
+    removeText: { color: colors.danger, fontWeight: '600' },
+    empty: { textAlign: 'center', color: colors.muted, marginTop: 40, paddingHorizontal: 30 },
+  });

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { fetchPokemonDetails, getArtworkUrl } from '../api';
 import { useTeam } from '../TeamContext';
-import { COLORS, APP_NAME } from '../config';
+import { useTheme } from '../ThemeContext';
+import { APP_NAME } from '../config';
 
 const MAX_STAT = 255;
 
@@ -18,6 +19,8 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function DetailScreen({ route, navigation }) {
   const { id } = route.params;
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,7 +47,7 @@ export default function DetailScreen({ route, navigation }) {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -126,45 +129,46 @@ export default function DetailScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  content: { alignItems: 'center', padding: 20 },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  artwork: { width: 220, height: 220 },
-  number: { color: COLORS.muted, marginTop: 8 },
-  name: { color: COLORS.text, fontSize: 28, fontWeight: '700', marginBottom: 10 },
-  types: { flexDirection: 'row', marginBottom: 10 },
-  typeChip: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    borderRadius: 14,
-    marginHorizontal: 4,
-  },
-  typeText: { color: '#fff', fontWeight: '600' },
-  measure: { color: COLORS.muted, marginBottom: 18 },
-  stats: { width: '100%', marginBottom: 20 },
-  statRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
-  statName: { width: 120, color: COLORS.text, fontSize: 13 },
-  barTrack: {
-    flex: 1,
-    height: 10,
-    backgroundColor: '#E2D9EE',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  barFill: { height: 10, backgroundColor: COLORS.accent, borderRadius: 5 },
-  statValue: { width: 36, textAlign: 'right', color: COLORS.text, fontWeight: '600' },
-  errorText: { color: COLORS.text, fontSize: 16, marginBottom: 6 },
-  errorDetail: { color: COLORS.muted, marginBottom: 14 },
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignSelf: 'stretch',
-    alignItems: 'center',
-  },
-  buttonDisabled: { backgroundColor: COLORS.muted },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-});
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { alignItems: 'center', padding: 20 },
+    center: { alignItems: 'center', justifyContent: 'center' },
+    artwork: { width: 220, height: 220 },
+    number: { color: colors.muted, marginTop: 8 },
+    name: { color: colors.text, fontSize: 28, fontWeight: '700', marginBottom: 10 },
+    types: { flexDirection: 'row', marginBottom: 10 },
+    typeChip: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 14,
+      paddingVertical: 4,
+      borderRadius: 14,
+      marginHorizontal: 4,
+    },
+    typeText: { color: '#fff', fontWeight: '600' },
+    measure: { color: colors.muted, marginBottom: 18 },
+    stats: { width: '100%', marginBottom: 20 },
+    statRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
+    statName: { width: 120, color: colors.text, fontSize: 13 },
+    barTrack: {
+      flex: 1,
+      height: 10,
+      backgroundColor: colors.track,
+      borderRadius: 5,
+      overflow: 'hidden',
+    },
+    barFill: { height: 10, backgroundColor: colors.accent, borderRadius: 5 },
+    statValue: { width: 36, textAlign: 'right', color: colors.text, fontWeight: '600' },
+    errorText: { color: colors.text, fontSize: 16, marginBottom: 6 },
+    errorDetail: { color: colors.muted, marginBottom: 14 },
+    button: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 28,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignSelf: 'stretch',
+      alignItems: 'center',
+    },
+    buttonDisabled: { backgroundColor: colors.muted },
+    buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  });

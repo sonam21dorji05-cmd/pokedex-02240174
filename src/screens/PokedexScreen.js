@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,16 @@ import {
 } from 'react-native';
 import PokemonCard from '../components/PokemonCard';
 import { fetchPokemonPage, fetchAllPokemon } from '../api';
-import { COLORS, START_OFFSET } from '../config';
+import { START_OFFSET } from '../config';
+import { useTheme } from '../ThemeContext';
 
 const PAGE_SIZE = 20;
 const DEBOUNCE_MS = 400;
 
 export default function PokedexScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   // Infinite scroll state
   const [items, setItems] = useState([]);
   const [offset, setOffset] = useState(START_OFFSET);
@@ -29,6 +33,7 @@ export default function PokedexScreen({ navigation }) {
   const [allPokemon, setAllPokemon] = useState(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
+  const [searchTry, setSearchTry] = useState(0);
   const allLoadingRef = useRef(false);
 
   const loadMore = useCallback(async () => {
@@ -73,7 +78,7 @@ export default function PokedexScreen({ navigation }) {
         allLoadingRef.current = false;
         setSearching(false);
       });
-  }, [debouncedQuery, allPokemon]);
+  }, [debouncedQuery, allPokemon, searchTry]);
 
   const results =
     debouncedQuery && allPokemon
@@ -85,7 +90,7 @@ export default function PokedexScreen({ navigation }) {
 
   const renderFooter = () => {
     if (isSearching) return null;
-    if (loading) return <ActivityIndicator style={{ margin: 20 }} color={COLORS.primary} />;
+    if (loading) return <ActivityIndicator style={{ margin: 20 }} color={colors.accent} />;
     if (error && items.length > 0) {
       return (
         <View style={styles.center}>
@@ -102,20 +107,13 @@ export default function PokedexScreen({ navigation }) {
   const renderEmpty = () => {
     if (isSearching) {
       if (searching || (!allPokemon && !searchError)) {
-        return <ActivityIndicator style={{ marginTop: 40 }} color={COLORS.primary} />;
+        return <ActivityIndicator style={{ marginTop: 40 }} color={colors.accent} />;
       }
       if (searchError) {
         return (
           <View style={styles.center}>
             <Text style={styles.errorText}>{searchError}</Text>
-            <Pressable
-              style={styles.button}
-              onPress={() => {
-                setSearchError(null);
-                setDebouncedQuery((q) => q + ' ');
-                setDebouncedQuery(query.trim().toLowerCase());
-              }}
-            >
+            <Pressable style={styles.button} onPress={() => setSearchTry((n) => n + 1)}>
               <Text style={styles.buttonText}>Retry</Text>
             </Pressable>
           </View>
@@ -127,7 +125,7 @@ export default function PokedexScreen({ navigation }) {
         </View>
       );
     }
-    return loading ? <ActivityIndicator style={{ marginTop: 40 }} color={COLORS.primary} /> : null;
+    return loading ? <ActivityIndicator style={{ marginTop: 40 }} color={colors.accent} /> : null;
   };
 
   // Full-screen error when the very first load fails
@@ -148,7 +146,7 @@ export default function PokedexScreen({ navigation }) {
       <TextInput
         style={styles.search}
         placeholder="Search all Pokémon"
-        placeholderTextColor={COLORS.muted}
+        placeholderTextColor={colors.muted}
         value={query}
         onChangeText={setQuery}
         autoCapitalize="none"
@@ -175,29 +173,30 @@ export default function PokedexScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  center: { alignItems: 'center', justifyContent: 'center', padding: 20 },
-  search: {
-    backgroundColor: COLORS.card,
-    marginHorizontal: 12,
-    marginTop: 12,
-    marginBottom: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    fontSize: 16,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: COLORS.muted,
-  },
-  errorText: { color: COLORS.text, fontSize: 16, marginBottom: 6, textAlign: 'center' },
-  errorDetail: { color: COLORS.muted, marginBottom: 14 },
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  buttonText: { color: '#fff', fontWeight: '600' },
-});
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    center: { alignItems: 'center', justifyContent: 'center', padding: 20 },
+    search: {
+      backgroundColor: colors.card,
+      marginHorizontal: 12,
+      marginTop: 12,
+      marginBottom: 4,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 12,
+      fontSize: 16,
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.muted,
+    },
+    errorText: { color: colors.text, fontSize: 16, marginBottom: 6, textAlign: 'center' },
+    errorDetail: { color: colors.muted, marginBottom: 14 },
+    button: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    buttonText: { color: '#fff', fontWeight: '600' },
+  });

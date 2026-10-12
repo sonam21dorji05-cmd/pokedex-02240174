@@ -1,5 +1,8 @@
-import { Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { Text, Pressable } from 'react-native';
+import {
+  NavigationContainer,
+  DefaultTheme,
+} from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -9,26 +12,36 @@ import TeamScreen from './src/screens/TeamScreen';
 import GameScreen from './src/screens/GameScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import { TeamProvider } from './src/TeamContext';
-import { APP_NAME, COLORS } from './src/config';
+import { ThemeProvider, useTheme } from './src/ThemeContext';
+import { APP_NAME } from './src/config';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-const headerStyle = {
-  headerStyle: { backgroundColor: COLORS.primary },
-  headerTintColor: '#fff',
-};
 
 const tabIcon = (emoji) => ({ focused }) => (
   <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
 );
 
+function ThemeToggle() {
+  const { isDark, toggleTheme } = useTheme();
+  return (
+    <Pressable onPress={toggleTheme} style={{ marginLeft: 16 }} hitSlop={10}>
+      <Text style={{ fontSize: 22 }}>{isDark ? '☀️' : '🌙'}</Text>
+    </Pressable>
+  );
+}
+
 function Tabs() {
+  const { colors, isDark } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
-        ...headerStyle,
-        tabBarActiveTintColor: COLORS.primary,
+        headerStyle: { backgroundColor: colors.primary },
+        headerTintColor: '#fff',
+        headerLeft: () => <ThemeToggle />,
+        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
+        tabBarActiveTintColor: isDark ? colors.accent : colors.primary,
+        tabBarInactiveTintColor: colors.muted,
       }}
     >
       <Tab.Screen
@@ -62,24 +75,51 @@ function Tabs() {
   );
 }
 
+function Root() {
+  const { colors } = useTheme();
+
+  const navTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: colors.primary,
+      background: colors.background,
+      card: colors.card,
+      text: colors.text,
+      border: colors.border,
+    },
+  };
+
+  return (
+    <NavigationContainer theme={navTheme}>
+      <StatusBar style="light" />
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: '#fff',
+        }}
+      >
+        <Stack.Screen
+          name="Tabs"
+          component={Tabs}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={{ title: 'Details', headerBackTitle: 'Back' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   return (
-    <TeamProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <Stack.Navigator screenOptions={headerStyle}>
-          <Stack.Screen
-            name="Tabs"
-            component={Tabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Detail"
-            component={DetailScreen}
-            options={{ title: 'Details', headerBackTitle: 'Back' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </TeamProvider>
+    <ThemeProvider>
+      <TeamProvider>
+        <Root />
+      </TeamProvider>
+    </ThemeProvider>
   );
 }
